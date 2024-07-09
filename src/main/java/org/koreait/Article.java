@@ -1,10 +1,11 @@
 package org.koreait;
 
+
 import java.sql.*;
-import java.util.InputMismatchException;
 import java.util.Scanner;
 
 public class Article {
+
 
     // 연결
     public class DBConnection {
@@ -22,117 +23,205 @@ public class Article {
     }
 
     static Connection conn = null;
-    static PreparedStatement stmt = null;
+    static PreparedStatement pstmt = null;
     static ResultSet rs = null;
+    static String idSearching = "";
+    static boolean check = true;
 
     public static void write(Scanner sc) {
-        System.out.println("제목을 입력해주세요 ");
-        String titleAdd = sc.next();
-        System.out.println("내용을 입력해주세요");
-        String bodyAdd = sc.next();
-        try {
-
-            String sql = "INSERT INTO `article` SET `regDate` = NOW(), `updateDate` =  NOW(), `title` = ?, `body` = ?";
-
-            stmt = conn.prepareStatement(sql);
-
-            stmt.setString(1, titleAdd);
-            stmt.setString(2, bodyAdd);
-
-            stmt.executeUpdate();
-
-        } catch (SQLException e) {
-            e.printStackTrace();
+        System.out.println("제목을 입력해주세요");
+        String titleAdd = sc.nextLine().trim();
+        String bodyAdd = "";
+        if (titleAdd.length() == 0) {
+            System.out.println("제목은 필수 입력 입니다");
+            check = false;
+        } else if (check == true) {
+            System.out.println("내용을 입력해주세요");
+            bodyAdd = sc.nextLine().trim();
+            if (bodyAdd.length() == 0) {
+                System.out.println("내용은 필수 입력 입니다");
+                check = false;
+            }
         }
 
-        System.out.println("게시글이 생성되었습니다");
+        if (check == true) {
+            try {
+                String sql = "INSERT INTO `article` SET `regDate` = NOW(), `updateDate` =  NOW(), `title` = ?, `body` = ?";
+
+                pstmt = conn.prepareStatement(sql);
+
+                pstmt.setString(1, titleAdd);
+                pstmt.setString(2, bodyAdd);
+
+                pstmt.executeUpdate();
+
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+            System.out.println("번 게시글이 생성되었습니다");
+        }
+
     }
 
-
-    public static void list(Scanner sc) {
+    public static void list() {
         try {
-            String sql = "SELECT * FROM `article`";
-            stmt = conn.prepareStatement(sql);
-            rs = stmt.executeQuery();
-
+            String sql = "SELECT * FROM `article` ORDER BY `id` DESC";
+            pstmt = conn.prepareStatement(sql);
+            rs = pstmt.executeQuery();
+            System.out.println("번호 ||             최초작성날짜              ||                작성날짜               ||   제목    ||   내용");
             while (rs.next()) {
                 int id = rs.getInt("id");
+                String regDate = rs.getString("regDate");
                 String updateDate = rs.getString("updateDate");
                 String title = rs.getString("title");
                 if (title.length() > 3) {
                     title = title.substring(0, 3);
                 }
                 String body = rs.getString("body");
-                System.out.printf("%d   ||          %s          ||   %s   ||   %s   \n", id, updateDate, title, body);
+                System.out.printf("%d   ||          %s          ||          %s          ||   %s   ||   %s   \n", id, regDate, updateDate, title, body);
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
 
+
+
+
     public static void update(Scanner sc) {
         System.out.println("수정할 게시글의 id를 입력해주세요");
         System.out.printf("수정할 id : ");
-        int updateId = sc.nextInt();
-        System.out.printf("수정할 제목 : ");
-        String titleUpdate = sc.next();
-        System.out.printf("수정할 내용 : ");
-        String bodyUpdate = sc.next();
+        String searchId = sc.nextLine().trim();
+        idSearching = searchId;
+        idSearch();
+        if (check == true) {
+            String titleUpdate = "";
+            String bodyUpdate = "";
+            try {
+                String sql = "SELECT * FROM `article` WHERE `id` = ?";
+                pstmt = conn.prepareStatement(sql);
 
-        try {
-            String sql = "UPDATE `article` SET `title` = ?, `body` = ? WHERE `id` = ?";
+                pstmt.setInt(1, Integer.parseInt(searchId));
 
-            stmt = conn.prepareStatement(sql);
+                rs = pstmt.executeQuery();
+                while (rs.next()) {
+                    titleUpdate = rs.getString("title");
+                    bodyUpdate = rs.getString("body");
+                }
+                System.out.println("기존 제목 : " + rs.getString("title"));
+                System.out.printf("수정할 제목 : ");
+                titleUpdate = sc.nextLine();
+                if (titleUpdate.length() == 0) {
+                    titleUpdate = rs.getString("title");
+                }
+                System.out.println("기존 내용 : " + rs.getString("body"));
+                System.out.printf("수정할 내용 : ");
+                bodyUpdate = sc.nextLine();
+                if (bodyUpdate.length() == 0) {
+                    bodyUpdate = rs.getString("body");
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
 
-            stmt.setString(1, titleUpdate);
-            stmt.setString(2, bodyUpdate);
-            stmt.setInt(3, updateId);
+            try {
+                String sql = "UPDATE `article` SET `title` = ?, `body` = ?, `updateDate` = NOW() WHERE `id` = ?";
 
-            stmt.executeUpdate();
+                pstmt = conn.prepareStatement(sql);
 
-        } catch (SQLException e) {
-            e.printStackTrace();
+                pstmt.setString(1, titleUpdate);
+                pstmt.setString(2, bodyUpdate);
+                pstmt.setInt(3, Integer.parseInt(searchId));
+
+                pstmt.executeUpdate();
+
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+            System.out.println(searchId + "번 게시글이 수정되었습니다");
+        } else {
+            System.out.println(idSearching + "번 게시글은 없습니다");
         }
-
-        System.out.println(updateId + "번 게시글이 수정되었습니다");
     }
+
+
+
+
 
     public static void delete(Scanner sc) {
         System.out.println("삭제할 게시글의 id를 입력해주세요");
         System.out.printf("삭제할 id : ");
-        int updateId = sc.nextInt();
+        String searchId = sc.nextLine().trim();
+        idSearching = searchId;
+        idSearch();
 
-        try {
-            String sql = "DELETE FROM `article` WHERE `id` = ?;";
+        if (check == true) {
+            try {
+                String sql = "DELETE FROM `article` WHERE `id` = ?";
 
-            stmt = conn.prepareStatement(sql);
-            stmt.setInt(1, updateId);
-            stmt.executeUpdate();
+                pstmt = conn.prepareStatement(sql);
+                pstmt.setInt(1, Integer.parseInt(searchId));
+                pstmt.executeUpdate();
 
-        } catch (SQLException e) {
-            e.printStackTrace();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+            System.out.println(searchId + "번 게시글이 삭제되었습니다");
+        } else {
+            System.out.println(idSearching + "번 게시글은 없습니다");
         }
-        System.out.println(updateId + "번 게시글이 삭제되었습니다");
+    }
+
+    public static void detail(Scanner sc) {
+        System.out.println("상세보기할 게시글의 id를 입력해주세요");
+        System.out.printf("id : ");
+        String searchId = sc.nextLine().trim();
+        idSearching = searchId;
+        idSearch();
+
+        if (check == true) {
+            try {
+                String sql = "SELECT * FROM `article` WHERE `id` = ?";
+                pstmt = conn.prepareStatement(sql);
+
+                pstmt.setInt(1, Integer.parseInt(searchId));
+
+                rs = pstmt.executeQuery();
+
+                while (rs.next()) {
+                    System.out.println("번호 : " + rs.getInt("id"));
+                    System.out.println("최초 작성 날짜 : " + rs.getString("regDate"));
+                    System.out.println("최근 작성 날짜 : " + rs.getString("updateDate"));
+                    System.out.println("제목 : " + rs.getString("title"));
+                    System.out.println("내용 : " + rs.getString("body"));
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        } else {
+            System.out.println(idSearching + "번 게시글은 없습니다");
+        }
     }
 
 
     // 실행
     public static void main(String[] args) {
-
+        boolean loop = true;
         Scanner sc = new Scanner(System.in);
         conn = DBConnection.getConnection();
-        boolean loop = true;
 
         while (loop) {
-            System.out.println("1.게시글 작성 2.게시글 리스트 3.게시글 수정 4.게시글 삭제");
+            check = true;
+            System.out.println("1. 게시글 작성 2. 게시글 리스트 3. 게시글 수정 4. 게시글 삭제");
+            System.out.println("5. 게시글 상세보기");
             System.out.printf("명령어 ) ");
-            int input = sc.nextInt();
-            switch (input) {
+            String input = sc.nextLine();
+            switch (Integer.parseInt(input)) {
                 case 1:
                     write(sc);
                     break;
                 case 2:
-                    list(sc);
+                    list();
                     break;
                 case 3:
                     update(sc);
@@ -140,21 +229,53 @@ public class Article {
                 case 4:
                     delete(sc);
                     break;
+                case 5:
+                    detail(sc);
+                    break;
                 case 9:
                     loop = false;
                     sc.close();
                     try {
-                        stmt.close();
+                        pstmt.close();
                         rs.close();
                         conn.close();
                     } catch (SQLException e) {
                         e.printStackTrace();
                     }
                     break;
-
             }
         }
     }
 
+    //
+    public static void idSearch() {
+        boolean searching = false;
+        String sql = "SELECT * FROM `article` WHERE `id`";
+        int idSearchingInt = 0;
+
+        try {
+            idSearchingInt = Integer.parseInt(idSearching);
+        } catch (NumberFormatException e) {
+            System.out.println("검색할 id는 숫자만 입력해주세요");
+            check = false;
+        }
+
+        try {
+            pstmt = conn.prepareStatement(sql);
+            rs = pstmt.executeQuery();
+            while (rs.next()) {
+                if (rs.getInt("id") == idSearchingInt) {
+                    searching = true;
+                }
+            }
+
+            if (searching == false) {
+                check = false;
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
 
 }
