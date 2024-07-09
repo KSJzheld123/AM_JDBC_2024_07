@@ -6,10 +6,16 @@ public class ArticleList {
     String title;
     String body;
 
-    ArticleList(int id, String title, String body) {
+
+    String regDate;
+    String updateDate;
+
+    ArticleList(int id, String title, String body, String regDate, String updateDate) {
         this.id = id;
         this.title = title;
         this.body = body;
+        this.regDate = regDate;
+        this.updateDate = updateDate;
     }
 
     private int getId() {
@@ -34,5 +40,21 @@ public class ArticleList {
 
     private void setBody(String body) {
         this.body = body;
+    }
+
+    public String getRegDate() {
+        return regDate;
+    }
+
+    public void setRegDate(String regDate) {
+        this.regDate = regDate;
+    }
+
+    public String getUpdateDate() {
+        return updateDate;
+    }
+
+    public void setUpdateDate(String updateDate) {
+        this.updateDate = updateDate;
     }
 }
