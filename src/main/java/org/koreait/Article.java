@@ -5,8 +5,6 @@ import java.sql.*;
 import java.util.Scanner;
 
 public class Article {
-
-
     // 연결
     public class DBConnection {
         public static Connection getConnection() {
@@ -27,6 +25,7 @@ public class Article {
     static ResultSet rs = null;
     static String idSearching = "";
     static boolean check = true;
+    static boolean nullCheck = false;
 
     public static void write(Scanner sc) {
         System.out.println("제목을 입력해주세요");
@@ -58,9 +57,19 @@ public class Article {
             } catch (SQLException e) {
                 e.printStackTrace();
             }
-            System.out.println("번 게시글이 생성되었습니다");
-        }
 
+            try {
+                String sql = "SELECT * FROM `article`";
+                pstmt = conn.prepareStatement(sql);
+                rs = pstmt.executeQuery();
+                while (rs.next()) {
+                    idSearching = rs.getString("id");
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+            System.out.println(idSearching + "번 게시글이 생성되었습니다");
+        }
     }
 
     public static void list() {
@@ -85,13 +94,15 @@ public class Article {
         }
     }
 
-
-
-
     public static void update(Scanner sc) {
         System.out.println("수정할 게시글의 id를 입력해주세요");
         System.out.printf("수정할 id : ");
         String searchId = sc.nextLine().trim();
+        if (searchId.length() == 0) {
+            nullCheck = true;
+            check = false;
+            System.out.println("id를 입력해주세요");
+        }
         idSearching = searchId;
         idSearch();
         if (check == true) {
@@ -108,13 +119,13 @@ public class Article {
                     titleUpdate = rs.getString("title");
                     bodyUpdate = rs.getString("body");
                 }
-                System.out.println("기존 제목 : " + rs.getString("title"));
+                System.out.println("기존 제목 : " + titleUpdate);
                 System.out.printf("수정할 제목 : ");
                 titleUpdate = sc.nextLine();
                 if (titleUpdate.length() == 0) {
                     titleUpdate = rs.getString("title");
                 }
-                System.out.println("기존 내용 : " + rs.getString("body"));
+                System.out.println("기존 내용 : " + bodyUpdate);
                 System.out.printf("수정할 내용 : ");
                 bodyUpdate = sc.nextLine();
                 if (bodyUpdate.length() == 0) {
@@ -140,20 +151,62 @@ public class Article {
             }
             System.out.println(searchId + "번 게시글이 수정되었습니다");
         } else {
-            System.out.println(idSearching + "번 게시글은 없습니다");
+            if (check == false && nullCheck == false) {
+                System.out.println(idSearching + "번 게시글은 없습니다");
+            }
         }
     }
 
-
-
-
-
     public static void delete(Scanner sc) {
+        boolean deleteCheck = true;
         System.out.println("삭제할 게시글의 id를 입력해주세요");
         System.out.printf("삭제할 id : ");
         String searchId = sc.nextLine().trim();
+        if (searchId.length() == 0) {
+            nullCheck = true;
+            check = false;
+            System.out.println("id를 입력해주세요");
+        }
         idSearching = searchId;
         idSearch();
+
+        try {
+            String sql = "SELECT * FROM `article` WHERE `id` = ?";
+            pstmt = conn.prepareStatement(sql);
+
+            pstmt.setInt(1, Integer.parseInt(searchId));
+
+            rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                System.out.println("===== 삭제할 게시글 =====");
+                System.out.println("번호 : " + rs.getInt("id"));
+                System.out.println("최초 작성 날짜 : " + rs.getString("regDate"));
+                System.out.println("최근 작성 날짜 : " + rs.getString("updateDate"));
+                System.out.println("제목 : " + rs.getString("title"));
+                System.out.println("내용 : " + rs.getString("body"));
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        System.out.println("지우시겠습니까 y / n");
+        String yN = sc.nextLine().trim();
+        if (yN.length() == 0) {
+            System.out.println("둘중하나 입력해주세요");
+            check = false;
+            deleteCheck = false;
+        } else if (yN.equals("N")) {
+            check = false;
+            deleteCheck = false;
+        } else if (yN.equals("y")) {
+            check = true;
+        } else {
+            System.out.println("둘중하나 입력해주세요");
+            check = false;
+            deleteCheck = false;
+        }
 
         if (check == true) {
             try {
@@ -168,7 +221,9 @@ public class Article {
             }
             System.out.println(searchId + "번 게시글이 삭제되었습니다");
         } else {
-            System.out.println(idSearching + "번 게시글은 없습니다");
+            if (check == false && nullCheck == false && deleteCheck == true) {
+                System.out.println(idSearching + "번 게시글은 없습니다");
+            }
         }
     }
 
@@ -176,6 +231,11 @@ public class Article {
         System.out.println("상세보기할 게시글의 id를 입력해주세요");
         System.out.printf("id : ");
         String searchId = sc.nextLine().trim();
+        if (searchId.length() == 0) {
+            nullCheck = true;
+            check = false;
+            System.out.println("id를 입력해주세요");
+        }
         idSearching = searchId;
         idSearch();
 
@@ -199,10 +259,11 @@ public class Article {
                 e.printStackTrace();
             }
         } else {
-            System.out.println(idSearching + "번 게시글은 없습니다");
+            if (check == false && nullCheck == false) {
+                System.out.println(idSearching + "번 게시글은 없습니다");
+            }
         }
     }
-
 
     // 실행
     public static void main(String[] args) {
@@ -212,37 +273,43 @@ public class Article {
 
         while (loop) {
             check = true;
-            System.out.println("1. 게시글 작성 2. 게시글 리스트 3. 게시글 수정 4. 게시글 삭제");
-            System.out.println("5. 게시글 상세보기");
+            nullCheck = false;
+            System.out.println("1. 게시글 작성     || 2. 게시글 리스트 || 3. 게시글 수정 || 4. 게시글 삭제");
+            System.out.println("5. 게시글 상세보기 ||");
+            System.out.println("9. 나가기");
             System.out.printf("명령어 ) ");
             String input = sc.nextLine();
-            switch (Integer.parseInt(input)) {
-                case 1:
-                    write(sc);
-                    break;
-                case 2:
-                    list();
-                    break;
-                case 3:
-                    update(sc);
-                    break;
-                case 4:
-                    delete(sc);
-                    break;
-                case 5:
-                    detail(sc);
-                    break;
-                case 9:
-                    loop = false;
-                    sc.close();
-                    try {
-                        pstmt.close();
-                        rs.close();
-                        conn.close();
-                    } catch (SQLException e) {
-                        e.printStackTrace();
-                    }
-                    break;
+            try {
+                switch (Integer.parseInt(input)) {
+                    case 1:
+                        write(sc);
+                        break;
+                    case 2:
+                        list();
+                        break;
+                    case 3:
+                        update(sc);
+                        break;
+                    case 4:
+                        delete(sc);
+                        break;
+                    case 5:
+                        detail(sc);
+                        break;
+                    case 9:
+                        loop = false;
+                        sc.close();
+                        try {
+                            pstmt.close();
+                            rs.close();
+                            conn.close();
+                        } catch (SQLException e) {
+                            e.printStackTrace();
+                        }
+                        break;
+                }
+            } catch (Exception e) {
+                System.out.println("제대로 입력해주세요");
             }
         }
     }
@@ -256,7 +323,6 @@ public class Article {
         try {
             idSearchingInt = Integer.parseInt(idSearching);
         } catch (NumberFormatException e) {
-            System.out.println("검색할 id는 숫자만 입력해주세요");
             check = false;
         }
 
@@ -277,5 +343,4 @@ public class Article {
             e.printStackTrace();
         }
     }
-
 }
