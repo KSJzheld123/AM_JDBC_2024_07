@@ -342,5 +342,6 @@ public class Article {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+
     }
 }
