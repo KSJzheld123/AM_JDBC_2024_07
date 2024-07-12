@@ -5,6 +5,8 @@ import java.sql.*;
 import java.util.Scanner;
 
 public class Article {
+
+
     // 연결
     public class DBConnection {
         public static Connection getConnection() {
@@ -267,49 +269,88 @@ public class Article {
 
     // 실행
     public static void main(String[] args) {
-        boolean loop = true;
+        Member mJ = new Member();
         Scanner sc = new Scanner(System.in);
         conn = DBConnection.getConnection();
 
-        while (loop) {
-            check = true;
-            nullCheck = false;
-            System.out.println("1. 게시글 작성     || 2. 게시글 리스트 || 3. 게시글 수정 || 4. 게시글 삭제");
-            System.out.println("5. 게시글 상세보기 ||");
-            System.out.println("9. 나가기");
+        while (true) {
+            boolean goBack = true;
+            System.out.println("1. 로그인 관련 2. 게시글 관련");
+            System.out.println("exit. 나가기");
             System.out.printf("명령어 ) ");
             String input = sc.nextLine();
-            try {
-                switch (Integer.parseInt(input)) {
-                    case 1:
-                        write(sc);
-                        break;
-                    case 2:
-                        list();
-                        break;
-                    case 3:
-                        update(sc);
-                        break;
-                    case 4:
-                        delete(sc);
-                        break;
-                    case 5:
-                        detail(sc);
-                        break;
-                    case 9:
-                        loop = false;
-                        sc.close();
-                        try {
-                            pstmt.close();
-                            rs.close();
-                            conn.close();
-                        } catch (SQLException e) {
-                            e.printStackTrace();
+
+            if (input.equals("1")) {
+
+                while (goBack == true) {
+                    System.out.println("1. 회원가입 2. 로그인");
+                    System.out.println("9. 메인 메뉴");
+                    System.out.printf("명령어 ) ");
+                    input = sc.nextLine();
+
+                    if (input.equals("9")) {
+                        goBack = false;
+                    }
+
+                    try {
+                        switch (Integer.parseInt(input)) {
+                            case 1:
+                                mJ.memberJoin(sc);
+                            case 2:
+                                mJ.login(sc);
                         }
-                        break;
+                    } catch (Exception e) {
+                        System.out.println("제대로 입력해주세요");
+                    }
                 }
-            } catch (Exception e) {
-                System.out.println("제대로 입력해주세요");
+
+            } else if (input.equals("2")) {
+                check = true;
+                nullCheck = false;
+                System.out.println("1. 게시글 작성     || 2. 게시글 리스트 || 3. 게시글 수정 || 4. 게시글 삭제");
+                System.out.println("5. 게시글 상세보기 ||");
+                System.out.println("9. 메인 메뉴");
+                System.out.printf("명령어 ) ");
+                input = sc.nextLine();
+
+                if (input.equals("9")) {
+                    goBack = false;
+                }
+
+                if (Member.dbLoginCheck == true && goBack == true) {
+                    try {
+                        switch (Integer.parseInt(input)) {
+                            case 1:
+                                write(sc);
+                                break;
+                            case 2:
+                                list();
+                                break;
+                            case 3:
+                                update(sc);
+                                break;
+                            case 4:
+                                delete(sc);
+                                break;
+                            case 5:
+                                detail(sc);
+                                break;
+                        }
+                    } catch (Exception e) {
+                        System.out.println("제대로 입력해주세요");
+                    }
+                } else {
+                    System.out.println("로그인 후 이용해 주세요");
+                }
+            } else if (input.equals("exit")) {
+                    sc.close();
+                try {
+                    pstmt.close();
+                    rs.close();
+                    conn.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
             }
         }
     }
