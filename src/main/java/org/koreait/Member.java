@@ -197,7 +197,6 @@ public class Member {
                     }
                     break;
                 }
-                System.out.println("회원정보가 수정되었습니다");
 
                 if (!updatePw.equals("")) {
                     loginStatus.setLoginPw(updatePw);
@@ -205,6 +204,19 @@ public class Member {
                 if (!name.equals("")) {
                     loginStatus.setLoginName(name);
                 }
+
+                try {
+                    String sql = "UPDATE article SET w_Name = ? WHERE w_id = ?";
+                    pstmt = conn.prepareStatement(sql);
+                    pstmt.setString(1, name);
+                    pstmt.setInt(2, loginStatus.getLoginNum());
+                    pstmt.executeUpdate();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+
+                System.out.println("회원정보가 수정되었습니다");
+
             }
         } else {
             System.out.println("로그인 후 이용해주세요");
