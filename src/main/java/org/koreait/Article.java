@@ -332,7 +332,7 @@ public class Article {
             if (input.equals("1")) {
 
                 while (goBack == true) {
-                    System.out.println("1. 회원가입 || 2. 로그인 || 3. 회원정보 수정");
+                    System.out.println("1. 회원가입 || 2. 로그인 || 3. 로그인상태 || 4. 회원정보 수정");
                     System.out.println("8. 로그아웃");
                     System.out.println("9. 메인 메뉴");
                     System.out.printf("명령어 ) ");
@@ -351,6 +351,9 @@ public class Article {
                                 mJ.login(sc);
                                 break;
                             case 3:
+                                mJ.memberStatus();
+                                break;
+                            case 4:
                                 mJ.memberUpdate(sc);
                                 break;
                             case 8:

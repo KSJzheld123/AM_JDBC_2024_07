@@ -131,7 +131,7 @@ public class Member {
                     LoginStatus loginStatusA = new LoginStatus(loginNum, loginId, loginPw, loginName);
                     loginStatus = loginStatusA;
 
-                    System.out.println("로그인이 확인되었습니다");
+                    System.out.println(loginName + "님 환영합니다");
                     dbLoginCheck = true;
                     loginCount = 0;
                     break;
@@ -147,13 +147,24 @@ public class Member {
         }
     }
 
+    public void memberStatus() {
+        if(dbLoginCheck == true) {
+            System.out.println("회원번호 : " + loginStatus.getLoginNum());
+            System.out.println("회원이름 : " + loginStatus.getLoginName());
+            System.out.println("회원아이디 : " + loginStatus.getLoginId());
+        } else {
+            System.out.println("로그인 상태가 아닙니다");
+        }
+    }
+
+
     public void memberUpdate(Scanner sc) {
         String updatePw = "";
         String updatePwCheck = "";
         String name = "";
 
         if (dbLoginCheck == true) {
-            System.out.printf("비밀번호 확인");
+            System.out.printf("비밀번호 확인 : ");
             String pW = sc.nextLine();
             if (pW.equals(loginStatus.getLoginPw())) {
                 while (true) {
