@@ -206,20 +206,20 @@ public class Article {
 
             rs = pstmt.executeQuery();
 
-                while (rs.next()) {
-                    id = rs.getInt("id");
-                    regDate = rs.getString("regDate");
-                    updateDate = rs.getString("updateDate");
-                    title = rs.getString("title");
-                    body = rs.getString("body");
-                    getId = rs.getInt("w_id");
-                }
+            while (rs.next()) {
+                id = rs.getInt("id");
+                regDate = rs.getString("regDate");
+                updateDate = rs.getString("updateDate");
+                title = rs.getString("title");
+                body = rs.getString("body");
+                getId = rs.getInt("w_id");
+            }
 
         } catch (SQLException e) {
             e.printStackTrace();
         }
 
-        if(loginStatus.getLoginNum() == getId) {
+        if (loginStatus.getLoginNum() == getId) {
             System.out.println("===== 삭제할 게시글 =====");
             System.out.println("번호 : " + id);
             System.out.println("최초 작성 날짜 : " + regDate);
