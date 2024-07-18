@@ -449,5 +449,4 @@ public class Article {
         }
 
     }
-
 }
